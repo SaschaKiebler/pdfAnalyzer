@@ -32,9 +32,14 @@ def extract_pictures(pdf_file_name):
     return pictures
 
 
+def extract_text(pdf_file_name):
+    reader = PdfReader(pdf_file_name)
+    text = {}
+    count = 0
+    for page in reader.pages:
+        text.update({f"page_{count}": page.extract_text()})
+        count += 1
+    return text
 
 
-# images = extract_pictures("test_pdfs/01 Einführung.pdf").get("page_4").items()
-# print(images)
-# for image in images:
-#     Image.open(io.BytesIO(image[1])).show()
+print(extract_text("test_pdfs/lotsOfText.pdf")['page_2'])
