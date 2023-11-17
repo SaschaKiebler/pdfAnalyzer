@@ -11,8 +11,9 @@
 # }
 import io
 
-from PIL import Image
+import pandas as pd
 from PyPDF2 import PdfReader, PdfWriter
+import PIL as pillow
 
 
 def extract_pictures(pdf_file_name):
@@ -55,3 +56,17 @@ def extract_all_data(pdf_file_name):
         }
 
     return data
+
+
+def extract_all_data_pd(pdf_file_name):
+    text = extract_text(pdf_file_name)
+    pictures = extract_pictures(pdf_file_name)
+
+    df_text = pd.DataFrame(text , index=[0])
+    df_pictures = pd.DataFrame(pictures, index=[0])
+
+    df_concat = pd.concat([df_text, df_pictures], axis=1)
+
+    print(df_concat.head())
+
+extract_all_data_pd("test_pdfs/lotsOfText.pdf")
