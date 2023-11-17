@@ -42,4 +42,16 @@ def extract_text(pdf_file_name):
     return text
 
 
-print(extract_text("test_pdfs/lotsOfText.pdf")['page_2'])
+def extract_all_data(pdf_file_name):
+    text = extract_text(pdf_file_name)
+    pictures = extract_pictures(pdf_file_name)
+
+    data = {}
+    for page_num in range(len(text)):
+        page_key = f"page_{page_num}"
+        data[page_key] = {
+            "text": text.get(page_key, ""),
+            "pictures": pictures.get(page_key, {})
+        }
+
+    return data

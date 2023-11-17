@@ -1,5 +1,5 @@
 import pytest
-from main import extract_pictures, extract_text
+from main import extract_pictures, extract_text, extract_all_data
 
 
 def test_extract_pictures_with_multiple_images():
@@ -90,13 +90,13 @@ def test_extract_text_with_valid_pdf():
     # Verify that the result is as expected
     assert isinstance(result, dict)
     assert "page_0" in result
-    # Add more assertions based on the known content of your PDF
+    assert "page_1" in result
 
 
 def test_extract_text_with_empty_pdf():
     result = extract_text('test_pdfs/empty.pdf')
     assert isinstance(result, dict)
-    assert len(result) == 0  # Assuming the PDF has no pages
+    assert len(result) == 0
 
 
 def test_extract_text_with_nonexistent_file():
@@ -106,11 +106,46 @@ def test_extract_text_with_nonexistent_file():
 
 def test_extract_text_page_count():
     result = extract_text('test_pdfs/lotsOfText.pdf')
-    expected_page_count = 5  # Set this to the known number of pages in your PDF
+    expected_page_count = 5
     assert len(result) == expected_page_count
 
 
 def test_extract_text_specific_page_content():
     result = extract_text('test_pdfs/lotsOfText.pdf')
     # Check the content of a specific page
-    assert "DIETARY HABITS IN LATVIA" in result["page_0"]  # Replace with actual expected text
+    assert "DIETARY HABITS IN LATVIA" in result["page_0"]
+
+
+def test_extract_all_data_with_valid_pdf():
+    # Load a known PDF file and check its content
+    result = extract_all_data('test_pdfs/Text_und_Bilder.pdf')
+    # Verify that the result is as expected
+    assert isinstance(result, dict)
+    assert "page_0" in result
+    assert "text" in result["page_0"]
+    assert "pictures" in result["page_0"]
+    assert len(result["page_0"]["pictures"]) == 1
+
+
+def test_extract_all_data_with_empty_pdf():
+    result = extract_all_data('test_pdfs/empty.pdf')
+    assert isinstance(result, dict)
+    assert len(result) == 0
+
+
+def test_extract_all_data_with_nonexistent_file():
+    with pytest.raises(FileNotFoundError):
+        extract_all_data('nonexistent_file.pdf')
+
+
+def test_extract_all_data_page_count():
+    result = extract_all_data('test_pdfs/Text_und_Bilder.pdf')
+    expected_page_count = 4
+    assert len(result) == expected_page_count
+
+
+def test_extract_all_data_specific_page_content():
+    result = extract_all_data('test_pdfs/Text_und_Bilder.pdf')
+    # Check the content of a specific page
+    assert "testtest" in result["page_0"]["text"]
+    assert "picture_0" in result["page_0"]["pictures"]
