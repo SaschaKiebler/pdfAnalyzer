@@ -58,15 +58,34 @@ def extract_all_data(pdf_file_name):
     return data
 
 
+
+
+
+def extract_pictures_df(pdf_file_name):
+    pictures = {}
+    reader = PdfReader(pdf_file_name)
+    pagecount = 0
+
+    for page in reader.pages:
+        pictures.update({f"page_{pagecount}": page.images})
+        pagecount += 1
+
+    # open pictures
+    for page in pictures:
+        for pic in pictures[page]:
+            pic_data = pictures[page][pic].data
+            pic_data_s = pillow.Image.open(pic_data)
+            pic_data_s.show()
+    return pictures
+
+
 def extract_all_data_pd(pdf_file_name):
     text = extract_text(pdf_file_name)
-    pictures = extract_pictures(pdf_file_name)
+    pictures = extract_pictures_df(pdf_file_name)
 
-    df_text = pd.DataFrame(text , index=[0])
-    df_pictures = pd.DataFrame(pictures, index=[0])
-
-    df_concat = pd.concat([df_text, df_pictures], axis=1)
-
+    df_text = pd.DataFrame.from_dict(text, orient='index', columns=['text'])
+    df_pictures = pd.DataFrame.from_dict(pictures, orient='index', columns=['pictures'])
+    df_concat = df_text.merge(df_pictures, on=df_text.index)
     print(df_concat.head())
 
-extract_all_data_pd("test_pdfs/lotsOfText.pdf")
+extract_all_data_pd("test_pdfs/multiple_images.pdf")
