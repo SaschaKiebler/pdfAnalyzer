@@ -40,7 +40,10 @@ def extract_text(pdf_file_name):
     text = {}
     count = 0
     for page in reader.pages:
-        text.update({f"page_{count}": page.extract_text()})
+        extracted_text = page.extract_text()
+        text.update({f"page_{count}": {"text":extracted_text,"topics":[]}})
+        text[f"page_{count}"]["topics"] = find_topics(extracted_text)
+
         count += 1
     return text
 
@@ -90,6 +93,16 @@ def extract_metadata(pdf_file_name):
 
 def find_topics(text):
     topics = []
+    response = requests.post(
+    "http://localhost:11434/api/generate",
+    json = {
+        "model": "llama2:latest",
+        "prompt": f"Give me topics that are covered in the following text: '''{text}''' return the topics in the Format <Topic1>, <Topic2>, <Topic3>.",
+        "stream": False,
+    }
+    ).json()
+    topics_raw = response.get("response")
+    topics = topics_raw.split(",")
     return topics
 
 
@@ -99,6 +112,7 @@ def describe_pictures(pictures):
         for pic in pictures[page]:
             # open the pictures as bytes from the path in pictures
             image = Image.open(pictures[page][pic]["path"])
+            topic = pictures[page][pic]["topic"]
 
             # Save the image to a bytes buffer
             buffer = io.BytesIO()
@@ -126,9 +140,8 @@ def extract_all_data(pdf_file_name):
     text = extract_text(pdf_file_name)
     pictures = extract_pictures(pdf_file_name)
     metadata = extract_metadata(pdf_file_name)
-    topics = find_topics(text)
 
-    title = metadata.get("/Title", pdf_file_name)
+    title = pdf_file_name
     title = title.split("/")[-1]
     title = title.split(".")[0]
 
@@ -142,8 +155,9 @@ def extract_all_data(pdf_file_name):
     for page_num in range(len(text)):
         page_key = f"page_{page_num}"
         data[page_key] = {
-            "text": text.get(page_key, ""),
-            "pictures": descripted_pics.get(page_key, {})
+            "text": text.get(page_key, {}).get("text", ""),
+            "pictures": descripted_pics.get(page_key, {}),
+            "topics": text.get(page_key, {}).get("topics", [])
         }
 
     with open("images/" + title + "/" + title + ".json", "w") as fp:
@@ -151,6 +165,6 @@ def extract_all_data(pdf_file_name):
     return data
 
 
-print(extract_all_data("test_pdfs/Kommunikation im Medizinwesen.pdf"))
+print(extract_all_data("test_pdfs/lotsOfText.pdf"))
 
 
